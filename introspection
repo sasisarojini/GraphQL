@@ -1,0 +1,29 @@
+Step by step guide – using IntrospectionFragmentMatcher
+Let’s see how we can make apollo client accurately map the fragments (unions & interfaces) and validate them before writing it to the store.
+Step 1: Create the schemaQuery file
+As the initial step, go to the project ‘src’ folder and create a file named schemaQuery.js and add the following code:
+
+The above code, will query your schema and store it in fragmentTypes.json (This json file is created automatically, you don’t have to create it). However, you can change the creation path of the fragmentTypes.json file. Finally, remember to replace the api.example.com with your actual API server.
+Step 2: Pass the fragmentTypes to InMemoryCache
+Go to the file where you initialise apollo client cache and type in the following code :
+import {IntrospectionFragmentMatcher} from 'apollo-cache-inmemory';
+import introspectionQueryResultData from '../../../src/fragmentTypes.json';
+const fragmentMatcher = new IntrospectionFragmentMatcher({
+introspectionQueryResultData
+});
+Note: The path for fragmentTypes.json file needs to be the same as step 1.
+Now, pass the fragmentMatcher with schema data to Apollo’s InMemoryCache as follows:
+cache: new InMemoryCache({fragmentMatcher})
+After you have added all the above code, your file should look something like this :
+
+Step 3: Build and fetch the Schema object into fragmentTypes.json
+Using node, in package.json set up a build script for querying the schema and writing it in fragmentTypes.json file. For example:
+ "build-fragment” : “node src/schemaQuery.js”
+Run “npm run build-fragment” and let the magic happen!
+The fragmentTypes.json file gets created and all your schema information related to unions and interfaces are stored as an object.
+Optional step : Set the schemaQuery.js script to run at build time
+To introspect the server every time we build the project, it is recommended to run a parallel node thread for your “start” script in package.json as follows :
+“start”: “ npm-run-all -p start-server build-fragment”,
+“start-server”: “node server.js”,
+“build-fragment”: “node src/schemaQuery.js”
+Now, running “npm run start” will trigger both your node server and the schemaQuery script that we just added.
